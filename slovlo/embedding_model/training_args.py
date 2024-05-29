@@ -25,6 +25,8 @@ class TrainingArgs:
 
     log_steps: int
 
+    mrr_batch_size: int = 1000
+
     def get_hyperparameters(self):
         return {
             "train_batch_size": self.train_batch_size,

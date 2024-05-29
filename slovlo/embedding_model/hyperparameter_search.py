@@ -54,7 +54,7 @@ def opt_function(
 
         os.remove(output_metrics_path)
 
-        return 0.0
+        return metrics["mrr"]
 
     return _opt_function
 

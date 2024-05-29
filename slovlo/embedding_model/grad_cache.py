@@ -9,11 +9,8 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LambdaLR
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-
 from slovlo.embedding_model.rand_context import RandContext
-
-
-TokenizedInputs = Dict[str, torch.Tensor]
+from slovlo.embedding_model.embed import embed, TokenizedInputs
 
 
 class GradCache:

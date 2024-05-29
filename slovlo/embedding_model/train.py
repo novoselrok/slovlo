@@ -26,7 +26,15 @@ from strictfire import StrictFire
 from slovlo.embedding_model.dataset import PairsDataset
 from slovlo.embedding_model.grad_cache import GradCache
 from slovlo.embedding_model.training_args import TrainingArgs
-from slovlo.embedding_model.tokenize_samples import tokenize, add_prefix, MAX_SEQ_LENGTH
+from slovlo.embedding_model.tokenize_samples import (
+    tokenize,
+    add_prefix,
+    MAX_SEQ_LENGTH,
+    QUERY_PREFIX,
+    DOCUMENT_PREFIX,
+)
+from slovlo.embedding_model.evaluate_mrr import evaluate_mrr
+from slovlo.embedding_model.embed import get_mean_pool_normalized_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -42,14 +50,27 @@ def log_on_main_process(log: str):
 
 def evaluate_on_main_process(
     args: TrainingArgs,
-    device: torch.device,
     model: PreTrainedModel,
     tokenizer: AutoTokenizer,
 ):
     if not is_main_process():
         return None
 
-    return {}
+    mrr = evaluate_mrr(
+        args.test_dataset,
+        model,
+        tokenizer,
+        get_embeddings=get_mean_pool_normalized_embeddings,
+        mrr_batch_size=args.mrr_batch_size,
+        embed_batch_size=args.eval_batch_size,
+        max_seq_length=MAX_SEQ_LENGTH,
+        query_prefix=QUERY_PREFIX,
+        document_prefix=DOCUMENT_PREFIX,
+    )
+
+    log_on_main_process(f"MRR: {mrr:.4f}")
+
+    return {"mrr": mrr}
 
 
 def save_model_on_main_process(
@@ -135,7 +156,9 @@ def train(args: TrainingArgs):
         f"Log every {args.log_steps} steps, {num_training_steps} total steps"
     )
 
-    progress_bar = tqdm(range(num_training_steps)) if is_main_process() else None
+    progress_bar = (
+        tqdm(range(num_training_steps), desc="Train") if is_main_process() else None
+    )
 
     for epoch in range(args.num_epochs):
         log_on_main_process(f"Epoch {epoch + 1}")
@@ -147,8 +170,8 @@ def train(args: TrainingArgs):
             ddp_model.train()
 
             prefixed_query_samples, prefixed_document_samples = (
-                add_prefix(query_samples, is_query=True),
-                add_prefix(document_samples),
+                add_prefix(query_samples, QUERY_PREFIX),
+                add_prefix(document_samples, DOCUMENT_PREFIX),
             )
 
             inputs = tokenize(
@@ -169,7 +192,7 @@ def train(args: TrainingArgs):
                 log_on_main_process(f"Loss ({step}): {loss.item()}")
 
                 ddp_model.eval()
-                evaluate_on_main_process(args, device, ddp_model.module, tokenizer)
+                evaluate_on_main_process(args, ddp_model.module, tokenizer)
 
             step += 1
             if progress_bar:
@@ -181,7 +204,7 @@ def train(args: TrainingArgs):
         dist.barrier()
 
     ddp_model.eval()
-    return evaluate_on_main_process(args, device, ddp_model.module, tokenizer)
+    return evaluate_on_main_process(args, ddp_model.module, tokenizer)
 
 
 def main(
