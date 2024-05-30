@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
 from tqdm import tqdm
 
-from slovlo.embedding_model.embed import get_mean_pool_normalized_embeddings
+from slovlo.embedding_model.embed import mean_pool_normalize_embeddings
 from slovlo.embedding_model.dataset import PairsDataset
 
 

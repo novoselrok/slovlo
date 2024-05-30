@@ -30,11 +30,11 @@ from slovlo.embedding_model.tokenize_samples import (
     tokenize,
     add_prefix,
     MAX_SEQ_LENGTH,
-    QUERY_PREFIX,
-    DOCUMENT_PREFIX,
+    E5_QUERY_PREFIX,
+    E5_DOCUMENT_PREFIX,
 )
 from slovlo.embedding_model.evaluate_mrr import evaluate_mrr
-from slovlo.embedding_model.embed import get_mean_pool_normalized_embeddings
+from slovlo.embedding_model.embed import mean_pool_normalize_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +60,12 @@ def evaluate_on_main_process(
         args.test_dataset,
         model,
         tokenizer,
-        get_embeddings=get_mean_pool_normalized_embeddings,
+        get_embeddings=mean_pool_normalize_embeddings,
         mrr_batch_size=args.mrr_batch_size,
         embed_batch_size=args.eval_batch_size,
         max_seq_length=MAX_SEQ_LENGTH,
-        query_prefix=QUERY_PREFIX,
-        document_prefix=DOCUMENT_PREFIX,
+        query_prefix=E5_QUERY_PREFIX,
+        document_prefix=E5_DOCUMENT_PREFIX,
     )
 
     log_on_main_process(f"MRR: {mrr:.4f}")
@@ -170,8 +170,8 @@ def train(args: TrainingArgs):
             ddp_model.train()
 
             prefixed_query_samples, prefixed_document_samples = (
-                add_prefix(query_samples, QUERY_PREFIX),
-                add_prefix(document_samples, DOCUMENT_PREFIX),
+                add_prefix(query_samples, E5_QUERY_PREFIX),
+                add_prefix(document_samples, E5_DOCUMENT_PREFIX),
             )
 
             inputs = tokenize(

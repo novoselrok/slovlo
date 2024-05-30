@@ -22,7 +22,7 @@ def embed(model: PreTrainedModel, inputs: TokenizedInputs) -> torch.Tensor:
     return F.normalize(embeddings, p=2, dim=1)
 
 
-def batch_mean_pool_normalized_embeddings(
+def batch_mean_pool_normalize_embeddings(
     samples: List[str],
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizer,
@@ -37,7 +37,7 @@ def batch_mean_pool_normalized_embeddings(
     return torch.vstack(embedded_batches)
 
 
-def get_mean_pool_normalized_embeddings(
+def mean_pool_normalize_embeddings(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizer,
     samples: List[str],
@@ -48,6 +48,6 @@ def get_mean_pool_normalized_embeddings(
     prefixed_samples = add_prefix(samples, prefix)
     with torch.no_grad():
         with torch.autocast(device_type="cuda", dtype=torch.float16):
-            return batch_mean_pool_normalized_embeddings(
+            return batch_mean_pool_normalize_embeddings(
                 prefixed_samples, model, tokenizer, embed_batch_size, max_seq_length
             )

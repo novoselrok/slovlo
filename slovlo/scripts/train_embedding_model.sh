@@ -9,7 +9,7 @@ export TOKENIZERS_PARALLELISM="false"
 
 torchrun --nproc_per_node=1 --nnodes=1 \
   $PROJECT_ROOT/slovlo/embedding_model/train.py \
-    --base_model=EMBEDDIA/sloberta \
+    --base_model=intfloat/multilingual-e5-base \
     --train_dataset_path="$1/train.jsonl" \
     --test_dataset_path="$1/test.jsonl" \
     --output_model_path="$2" \
@@ -18,7 +18,7 @@ torchrun --nproc_per_node=1 --nnodes=1 \
     --train_sub_batch_size=64 \
     --eval_batch_size=32 \
     --warmup_ratio=0.05 \
-    --learning_rate=1e-4 \
+    --learning_rate=1e-5 \
     --weight_decay=0.01 \
     --lr_schedule=linear \
     --optimizer=adamw \

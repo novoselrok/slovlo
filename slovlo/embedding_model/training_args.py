@@ -1,4 +1,3 @@
-from typing import Dict, Any
 from dataclasses import dataclass
 
 from slovlo.embedding_model.dataset import PairsDataset
