@@ -25,7 +25,7 @@ slovlo_model = AutoModel.from_pretrained("rokn/slovlo-v1").eval().to(device)
 slovlo_tokenizer = AutoTokenizer.from_pretrained("rokn/slovlo-v1")
 
 
-def get_embeddings(texts: List[str]):
+def get_embeddings(texts: List[str], prefix: str):
     def mean_pool(
         last_hidden_states: torch.Tensor, attention_mask: torch.Tensor
     ) -> torch.Tensor:
@@ -34,8 +34,9 @@ def get_embeddings(texts: List[str]):
         )
         return last_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
 
+    prefixed_texts = [f"{prefix}{text}" for text in texts]
     inputs = slovlo_tokenizer(
-        texts, return_tensors="pt", truncation=True, padding=True
+        prefixed_texts, return_tensors="pt", truncation=True, padding=True
     ).to(device)
 
     with torch.no_grad():
@@ -46,10 +47,10 @@ def get_embeddings(texts: List[str]):
 
 
 # Embed the documents (destinations).
-document_embeddings = get_embeddings(documents)
+document_embeddings = get_embeddings(documents, "document: ")
 
 # Embed the user query.
-query_embedding = get_embeddings([query])
+query_embedding = get_embeddings([query], "query: ")
 
 # Compute dot product between the query and each document.
 similarities = torch.matmul(document_embeddings, query_embedding.T).squeeze()
